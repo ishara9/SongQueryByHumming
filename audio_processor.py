@@ -6,15 +6,15 @@ from statsmodels.tsa.stattools import acf
 from melody_util import *
 
 
-def get_pitches_from_audio(filename, duration=40.0):
+def get_pitches_from_audio(filename, multiplier=40):
     channels, frame_rate = get_channel_info_from_audio_file(filename)
-    window_size = int(round(duration * frame_rate / 1000.0))
+    window_size = int(round(multiplier * frame_rate / 1000.0))
     data = channels[0]
     energy = get_energy(data)
     threshold = 0.3 * energy
     pitch_frequencies = []
-    for window in sliding_window(data, window_size=window_size):
-        pitch = get_frame_to_pitch(window, frame_rate, threshold)
+    for _window in sliding_window(data, window_size):
+        pitch = get_frame_to_pitch(_window, frame_rate, threshold)
         pitch_frequencies.append(pitch)
     return pitch_frequencies
 

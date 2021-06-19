@@ -16,8 +16,8 @@ def query(data_model, _query_pv):
     for file_name, model_pv in data_model.items():
         distance[file_name] = calculate_dtw(model_pv, _query_pv)
     sorted_items = dict(sorted(distance.items(), key=lambda item: item[1])).items()
-    first_item = list(sorted_items)[0]
-    return first_item
+    item_list = list(sorted_items)
+    return item_list[0]
 
 
 if __name__ == '__main__':
@@ -25,8 +25,10 @@ if __name__ == '__main__':
     model = create_data_model('data/train')
     pickle_data(model)
     model = unpickle_data()
-    test_file = 'data/test/nadi_ganga_hum.m4a'
-    # test_file = 'data/test/happyBirthday_by_ishara.m4a'
+    # test_file = 'data/test/nadi_ganga_hum.m4a'
+    test_file = 'data/test/happyBirthday_by_ishara.m4a'
+    # test_file = 'data/test/00020.wav'
+    # test_file = 'data/test/Happy_bday_long.m4a'
     query_pv = get_pitch_vector_by_file(test_file)
     filtered_query_pv = filter_outlier_pitches(query_pv)
     name, dis = query(model, filtered_query_pv)

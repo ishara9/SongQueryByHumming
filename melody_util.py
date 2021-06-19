@@ -2,11 +2,8 @@ from collections import Iterable
 
 import numpy as np
 
-DEFAULT_SAMPLING_RATE = 44100
-DEFAULT_WINDOW_SIZE = 4096
 
-
-def sliding_window(sequence, window_size=DEFAULT_WINDOW_SIZE, shift_ratio=1):
+def sliding_window(sequence, window_size=50, shift_ratio=1):
     shift = int(shift_ratio * window_size)
 
     validate_sliding_window_parameters(sequence, shift, window_size)
