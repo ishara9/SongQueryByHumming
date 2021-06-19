@@ -22,11 +22,11 @@ def query(data_model, _query_pv):
 
 if __name__ == '__main__':
     log_time()
-    # model = create_data_model('data/train')
-    # pickle_data(model)
+    model = create_data_model('data/train')
+    pickle_data(model)
     model = unpickle_data()
-    # test_file = 'data/test/nadi_ganga_hum.m4a'
-    test_file = 'data/test/happyBirthday_by_ishara.m4a'
+    test_file = 'data/test/nadi_ganga_hum.m4a'
+    # test_file = 'data/test/happyBirthday_by_ishara.m4a'
     query_pv = get_pitch_vector_by_file(test_file)
     filtered_query_pv = filter_outlier_pitches(query_pv)
     name, dis = query(model, filtered_query_pv)

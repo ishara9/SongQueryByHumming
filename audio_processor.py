@@ -1,10 +1,7 @@
-from dtw import *
-# from pydub import AudioSegment
-
 import audiosegment
+from dtw import *
 from scipy.signal import medfilt
 from statsmodels.tsa.stattools import acf
-import matplotlib.pyplot as plt
 
 from melody_util import *
 
@@ -14,10 +11,10 @@ def get_pitches_from_audio(filename, duration=40.0):
     window_size = int(round(duration * frame_rate / 1000.0))
     data = channels[0]
     energy = get_energy(data)
-    thresh = 0.3 * energy
+    threshold = 0.3 * energy
     pitch_frequencies = []
-    for window in sliding_window(data, window_size):
-        pitch = get_frame_to_pitch(window, frame_rate, thresh)
+    for window in sliding_window(data, window_size=window_size):
+        pitch = get_frame_to_pitch(window, frame_rate, threshold)
         pitch_frequencies.append(pitch)
     return pitch_frequencies
 
@@ -32,17 +29,17 @@ def get_channel_info_from_audio_file(filename):
     return channels, audio.frame_rate
 
 
-def get_frame_to_pitch(frame, fs, thresh):
+def get_frame_to_pitch(frame, fs, threshold):
     frame_x = np.asarray(frame)
     invalid = -1
-    if get_energy(frame_x) < thresh:
+    if get_energy(frame_x) < threshold:
         return invalid
     else:
         down_limit = 40
         up_limit = 1000
         n1 = int(round(fs * 1.0 / up_limit))
         n2 = int(round(fs * 1.0 / down_limit))
-        frame_acf = acf(frame_x, fft=False)
+        frame_acf = acf(frame_x, fft=True, nlags=40)
         if n1 > frame_acf.size:
             n1 = frame_acf.size - 1
         frame_acf[np.arange(n1)] = invalid
@@ -59,7 +56,6 @@ def get_energy(sequence):
 
 
 def calculate_dtw(_model_pv, _query_pv):
-
     model_check = ~np.isnan(_model_pv)
     refined_model = _model_pv[model_check]
 
@@ -80,14 +76,16 @@ def get_pitch_vector_by_file(file):
 
 
 def get_notes_by_frequencies(frequencies):
+    # log base: 2
     log440 = 8.78135971
     notes_array = np.asarray(frequencies)
     np.seterr(all='ignore')
     try:
-        notes = 12 * (np.log2(notes_array) - log440) + 69
+        notes = 12 * (np.log2(notes_array) - log440)
         return notes
     except Exception as e:
         raise Exception("freq to note conversion error: " + str(e))
+
 
 if __name__ == '__main__':
     file = get_channel_info_from_audio_file("data/test/nadi_ganga_hum.m4a")
