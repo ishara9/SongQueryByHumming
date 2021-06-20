@@ -3,7 +3,7 @@ from dtw import *
 from scipy.signal import medfilt
 from statsmodels.tsa.stattools import acf
 
-from melody_util import *
+from audio_util import *
 
 
 def get_pitches_from_audio(filename, multiplier=40):

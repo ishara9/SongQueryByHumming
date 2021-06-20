@@ -25,8 +25,8 @@ if __name__ == '__main__':
     model = create_data_model('data/train')
     pickle_data(model)
     model = unpickle_data()
-    # test_file = 'data/test/nadi_ganga_hum.m4a'
-    test_file = 'data/test/happyBirthday_by_ishara.m4a'
+    test_file = 'data/test/nadi_ganga_hum.m4a'
+    # test_file = 'data/test/happyBirthday_by_ishara.m4a'
     # test_file = 'data/test/00020.wav'
     # test_file = 'data/test/Happy_bday_long.m4a'
     query_pv = get_pitch_vector_by_file(test_file)
