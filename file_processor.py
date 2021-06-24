@@ -6,10 +6,10 @@ import pickle
 def get_filtered_files(path, filters):
     try:
         files = os.listdir(path)
-        for filter in filters:
-            for f in fnmatch.filter(files, "*.%s" % filter):
+        for filter_ in filters:
+            for f in fnmatch.filter(files, "*.%s" % filter_):
                 p = os.path.join(path, f)
-                yield (p, filter)
+                yield p
     except:
         print("File read error")
 

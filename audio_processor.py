@@ -6,7 +6,7 @@ from statsmodels.tsa.stattools import acf
 from audio_util import *
 
 
-def get_pitches_from_audio(filename, multiplier=40):
+def get_pitches_from_audio(filename, multiplier=16):
     channels, frame_rate = get_channel_info_from_audio_file(filename)
     window_size = int(round(multiplier * frame_rate / 1000.0))
     data = channels[0]
@@ -21,6 +21,7 @@ def get_pitches_from_audio(filename, multiplier=40):
 
 def get_channel_info_from_audio_file(filename):
     audio = audiosegment.from_file(filename)
+    audio = audio.resample(sample_rate_Hz=20000, sample_width=2)
     data = np.frombuffer(audio.raw_data, np.int16)
     data = data - data.mean()
     channels = []

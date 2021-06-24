@@ -1,8 +1,9 @@
 import time
 
 
-def log_time():
+def log_time(event=""):
     global localtime
     localtime = time.localtime(time.time())
-    print('log INFO time: %d-%d-%d %d:%d:%d' % (
-        localtime.tm_mday, localtime.tm_mon, localtime.tm_year, localtime.tm_hour, localtime.tm_min, localtime.tm_sec))
+    print('log INFO %s time:  %d-%d-%d %d:%d:%d' % (event,
+                                                    localtime.tm_mday, localtime.tm_mon, localtime.tm_year,
+                                                    localtime.tm_hour, localtime.tm_min, localtime.tm_sec))
