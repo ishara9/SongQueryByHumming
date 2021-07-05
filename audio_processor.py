@@ -1,4 +1,6 @@
 import audiosegment
+import matplotlib.pyplot as plt
+# from pydub import AudioSegment
 from dtw import *
 from scipy.signal import medfilt
 from statsmodels.tsa.stattools import acf
@@ -19,6 +21,24 @@ def get_pitches_from_audio(filename, multiplier=16):
     return pitch_frequencies
 
 
+def get_pitches_from_audio2(filename, multiplier=40):
+    # channels, frame_rate = get_channel_info_from_audio_file(filename)
+    # window_size = int(round(multiplier * frame_rate / 1000.0))
+    # data = channels
+    # energy = get_energy(data)
+    # threshold = 0.3 * energy
+    # pitch_frequencies = []
+    # for _window in sliding_window(data, window_size):
+    #     pitch = get_frame_to_pitch(_window, frame_rate, threshold)
+    #     pitch_frequencies.append(pitch)
+
+    import librosa.display
+    song, sr = librosa.load(filename)
+    n_fft = 2048
+    pitch_frequencies = np.abs(librosa.stft(song))
+    return pitch_frequencies
+
+
 def get_channel_info_from_audio_file(filename):
     audio = audiosegment.from_file(filename)
     audio = audio.resample(sample_rate_Hz=20000, sample_width=2)
@@ -28,6 +48,54 @@ def get_channel_info_from_audio_file(filename):
     for i in range(audio.channels):
         channels.append(data[i::audio.channels])
     return channels, audio.frame_rate
+
+
+def get_channel_info_from_audio_file_lib(filename):
+    audio = audiosegment.from_file(filename)
+
+    hist_bins, hist_values = audio.fft()
+    hist_vals_real_normed = np.abs(hist_values) / len(hist_values)
+    # plt.plot(hist_bins / 1000, hist_vals_real_normed)
+    # plt.xlabel("kHz")
+    # plt.ylabel("dB")
+    # plt.show()
+
+    data = hist_vals_real_normed
+    channels2 = []
+    for i in range(audio.channels):
+        channels2.append(data[i::audio.channels])
+
+    # freqs, times, amplitudes =  audio.spectrogram(window_length_s=0.03, overlap=0.5)
+    #
+    # amplitudes = 10 * np.log10(amplitudes + 1e-9)
+    # # Plot
+    # plt.pcolormesh(times, freqs, amplitudes)
+    # plt.xlabel("Time in Seconds")
+    # plt.ylabel("Frequency in Hz")
+    # plt.show()
+
+    # data = np.frombuffer(audio.raw_data, np.int16)
+    # data = data - data.mean()
+    # channels = []
+    # for i in range(audio.channels):
+    #     channels.append(data[i::audio.channels])
+    return channels2, audio.frame_rate
+
+
+def visualize(spect, frequencies, title=""):
+    # Visualize the result of calling seg.filter_bank() for any number of filters
+    i = 0
+    for freq, (index, row) in zip(frequencies[::-1], enumerate(spect[::-1, :])):
+        plt.subplot(spect.shape[0], 1, index + 1)
+    if i == 0:
+        plt.title(title)
+    i += 1
+    plt.ylabel("{0:.0f}".format(freq))
+    plt.plot(row)
+    plt.show()
+    seg = audiosegment.from_file("some_audio.wav").resample(sample_rate_Hz=24000, sample_width=2, channels=1)
+    spec, frequencies = seg.filter_bank(nfilters=5)
+    visualize(spec, frequencies)
 
 
 def get_frame_to_pitch(frame, fs, threshold):
@@ -89,4 +157,4 @@ def get_notes_by_frequencies(frequencies):
 
 
 if __name__ == '__main__':
-    file = get_channel_info_from_audio_file("data/test/nadi_ganga_hum.m4a")
+    file = get_channel_info_from_audio_file_lib("data/test/nadi_ganga_hum.m4a")

@@ -19,7 +19,31 @@ def query(data_model, _query_pv):
         distance[file_name] = calculate_dtw(model_pv, _query_pv)
     sorted_items = dict(sorted(distance.items(), key=lambda item: item[1])).items()
     item_list = list(sorted_items)
-    return item_list[0]
+    return item_list
+
+
+def process_list(_list):
+    for i, x in enumerate(_list):
+        _list[i] = (x[0][len("data/mix100\\"):], x[1])
+    return _list
+
+
+def search_tune():
+    log_time("Start")
+    file = "dataMIX100.pickle"
+    model = unpickle_data(file=file)
+    log_time("UnPickled")
+    test_file = 'uploads/blob.wav'
+    query_pv = get_pitch_vector_by_file(test_file)
+    log_time("Query Audio")
+    filtered_query_pv = filter_outlier_pitches(query_pv)
+    _list = query(model, filtered_query_pv)
+    name, dis = _list[0]
+    print('The best match is:')
+    print('  name:', name, ', distance:', dis)
+    log_time("End")
+    _list[:10]
+    return process_list(_list[:10])
 
 
 if __name__ == '__main__':
@@ -45,7 +69,7 @@ if __name__ == '__main__':
     query_pv = get_pitch_vector_by_file(test_file)
     log_time("Query Audio")
     filtered_query_pv = filter_outlier_pitches(query_pv)
-    name, dis = query(model, filtered_query_pv)
+    name, dis = query(model, filtered_query_pv)[0]
 
     print('The best match is:')
     print('  name:', name, ', distance:', dis)
