@@ -1,5 +1,6 @@
 import time
 
+log_timer = 0
 
 def log_time(event=""):
     global localtime

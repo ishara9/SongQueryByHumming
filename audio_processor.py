@@ -1,8 +1,8 @@
 import audiosegment
 import matplotlib.pyplot as plt
 from dtw import *
-from scipy.signal import medfilt
 from statsmodels.tsa.stattools import acf
+import scipy.signal as sg
 
 from audio_util import *
 
@@ -17,14 +17,23 @@ def get_pitches_from_audio(filename, multiplier=8):
     for _window in sliding_window(data, window_size, shift_ratio=0.8):
         pitch = get_frame_to_pitch(_window, frame_rate, threshold)
         pitch_frequencies.append(pitch)
-    print(pitch_frequencies)
+    # print(pitch_frequencies)
     return pitch_frequencies
 
 
 def get_channel_info_from_audio_file(filename):
     audio = audiosegment.from_file(filename)
     # audio = audio.resample(sample_rate_Hz=20000, sample_width=2)
+
+
     data = np.frombuffer(audio.raw_data, np.int16)
+
+    fr = audio.frame_rate
+    b, a = sg.butter(4, 1000. / (fr / 2.), 'high')
+    data = sg.filtfilt(b, a, data)
+    # b, a = sg.butter(4, 100. / (fr / 2.), 'low')
+    # data = sg.filtfilt(b, a, data)
+
     data = data - data.mean()
     channels = []
     for i in range(audio.channels):
@@ -115,11 +124,10 @@ def calculate_dtw(_model_pv, _query_pv):
     return distance
 
 
-def get_pitch_vector_by_file(file):
+def get_note_vector_by_file(file):
     frequencies = get_pitches_from_audio(file)
     notes = get_notes_by_frequencies(frequencies)
-    pitch_vector = medfilt(notes)
-    return pitch_vector
+    return notes
 
 
 def get_notes_by_frequencies(frequencies):
@@ -132,7 +140,3 @@ def get_notes_by_frequencies(frequencies):
         return notes
     except Exception as e:
         raise Exception("freq to note conversion error: " + str(e))
-
-
-if __name__ == '__main__':
-    file = get_channel_info_from_audio_file_lib("data/test/nadi_ganga_hum.m4a")

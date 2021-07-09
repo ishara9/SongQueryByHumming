@@ -3,7 +3,7 @@ import os
 import pickle
 
 
-def get_filtered_files(path, filters):
+def get_filtered_files(path, filters=['wav']):
     try:
         files = os.listdir(path)
         for filter_ in filters:
@@ -25,3 +25,16 @@ def unpickle_data(file='data.pickle'):
     new_dict = pickle.load(infile)
     infile.close()
     return new_dict
+
+
+def file_pickle_rename(file_path):
+    return file_path.replace("/", "_") + ".pickle"
+
+
+if __name__ == '__main__':
+    file = "data/LocalHumData/sinhala"
+    print(file_pickle_rename(file))
+    filters = ['m4a']
+    files = get_filtered_files(file, filters)
+    for file_name in files:
+        print(file_name)
