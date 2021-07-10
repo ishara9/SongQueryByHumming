@@ -6,7 +6,7 @@ from logger import log_time
 def evaluate_model():
     log_time("Start")
 
-    file = "data/sinhala"
+    file = "data/selected_set"
 
     model = unpickle_data(file=file_pickle_rename(file))
     log_time("UnPickled")

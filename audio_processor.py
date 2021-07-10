@@ -4,6 +4,7 @@ from dtw import *
 from statsmodels.tsa.stattools import acf
 import scipy.signal as sg
 
+from DTW_handler import local_dtw_distance
 from audio_util import *
 
 
@@ -118,6 +119,7 @@ def calculate_dtw(_model_pv, _query_pv):
     query_check = ~np.isnan(_query_pv)
     refined_query = _query_pv[query_check]
 
+    # distance = local_dtw_distance(refined_query, refined_model)
     alignment = dtw(refined_query, refined_model, keep_internals=True)
     distance = alignment.distance
     # alignment.plot(type="threeway")

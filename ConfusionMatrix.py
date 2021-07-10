@@ -8,7 +8,7 @@ def create_confusion_matrix(predicted, actual, values):
 
 
 def get_classification_report(predicted, actual, values):
-    classification_report = metrics.metrics.classification_report(actual, predicted, labels=values)
+    classification_report = metrics.classification_report(actual, predicted, labels=values)
     print(classification_report)
     return classification_report
 

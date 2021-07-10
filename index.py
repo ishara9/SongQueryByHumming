@@ -5,6 +5,13 @@ from file_processor import *
 from logger import log_time
 
 
+def zero_index_dtw(filtered_notes):
+    zero_index_array = np.asarray([0 for _ in range(len(filtered_notes))])
+    variation = calculate_dtw(zero_index_array, filtered_notes)
+    print(variation)
+    return variation
+
+
 def create_data_model(file, filters=['wav']):
     data_set = {}
     files = get_filtered_files(file, filters)
@@ -12,7 +19,9 @@ def create_data_model(file, filters=['wav']):
         log_time("progress " + file_name)
         note_vector = get_note_vector_by_file(file_name)
         filtered_notes = filter_sound(note_vector)
-        data_set[file_name] = filtered_notes
+        # zero_dtw = zero_index_dtw(filtered_notes)
+        song = {'notes': filtered_notes, 'zero_dtw': 0}
+        data_set[file_name] = song
     log_time("Model Created")
     pickle_data(data_set, file=file_pickle_rename(file))
     log_time("Pickled")
@@ -29,7 +38,9 @@ def filter_sound(notes):
 
 def query(data_model, _query_pv):
     distance = {}
-    for file_name, model_pv in data_model.items():
+    for file_name, song1 in data_model.items():
+        model_pv = song1['notes']
+        zero_dtw = song1['zero_dtw']
         distance[file_name] = calculate_dtw(model_pv, _query_pv)
     sorted_items = dict(sorted(distance.items(), key=lambda item: item[1])).items()
     item_list = list(sorted_items)
@@ -44,7 +55,7 @@ def process_list(_list):
 
 def search_tune():
     query_file = 'uploads/blob.wav'
-    data_model = "data/sinhala"
+    data_model = 'data/selected_set'
     _list = search_song(query_file, data_model)
     return process_list(_list[:10])
 
@@ -75,9 +86,9 @@ if __name__ == '__main__':
     log_time("Start")
 
     data_model = 'data/selected_set'
-    # create_data_model(data_model)
+    create_data_model(data_model)
 
-    query_file = 'data/test/nadi_gananga_naaaaa.m4a'
+    query_file = 'data/test/nadi_ganga_hum.m4a'
     _list = search_song(query_file, data_model)
 
     log_time("End")
