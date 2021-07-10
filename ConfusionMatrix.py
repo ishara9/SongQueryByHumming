@@ -1,15 +1,17 @@
 from sklearn import metrics
 
 
-def create_confusion_matrix(predicted, actual):
-    confusion_matrix = metrics.confusion_matrix(actual, predicted, predicted)
+def create_confusion_matrix(predicted, actual, values):
+    confusion_matrix = metrics.confusion_matrix(actual, predicted, labels=values)
     print(confusion_matrix)
     return confusion_matrix
 
-def get_classification_report(predicted, actual):
-    classification_report = metrics.metrics.classification_report(actual, predicted, predicted)
+
+def get_classification_report(predicted, actual, values):
+    classification_report = metrics.metrics.classification_report(actual, predicted, labels=values)
     print(classification_report)
     return classification_report
+
 
 def prototype():
     # Predicted values

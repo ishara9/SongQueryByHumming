@@ -1,6 +1,7 @@
 import fnmatch
 import os
 import pickle
+import re
 
 
 def get_filtered_files(path, filters=['wav']):
@@ -29,6 +30,13 @@ def unpickle_data(file='data.pickle'):
 
 def file_pickle_rename(file_path):
     return file_path.replace("/", "_") + ".pickle"
+
+
+def file_path_to_name_formatter(path):
+    a = re.search(r'(\\)', path)
+    file_name = path[a.start() + 1:-4]
+    # print(file_name)
+    return file_name
 
 
 if __name__ == '__main__':

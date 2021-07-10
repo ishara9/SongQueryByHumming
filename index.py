@@ -20,9 +20,9 @@ def create_data_model(file, filters=['wav']):
 
 
 def filter_sound(notes):
-    notes = medfilt(notes)
-    # notes = filter_outlier_pitches(notes)
-    notes = np.gradient(notes)
+    notes = medfilt(notes, 3)  # kernal size 3
+    notes = filter_outlier_pitches(notes)
+    # notes = np.gradient(notes)
     notes = np.diff(notes)
     return notes
 
@@ -36,30 +36,32 @@ def query(data_model, _query_pv):
     return item_list
 
 
-def process_list(_list, suffix):
+def process_list(_list):
     for i, x in enumerate(_list):
-        _list[i] = (x[0][len("data/" + suffix + "\\"):], x[1])
+        _list[i] = (file_path_to_name_formatter(x[0]), x[1])
     return _list
 
 
 def search_tune():
-    log_time("Start")
-    # file = "dataSINHALA.pickle"
-    file = "dataSELECTED_15SEC.pickle"
-    model = unpickle_data(file=file)
+    query_file = 'uploads/blob.wav'
+    data_model = "data/sinhala"
+    _list = search_song(query_file, data_model)
+    return process_list(_list[:10])
+
+
+def search_song(query_file, data_model="data/sinhala"):
+    log_time("Query start")
+    model = unpickle_data(file=file_pickle_rename(data_model))
     log_time("UnPickled")
-    test_file = 'uploads/blob.wav'
-    query_pv = get_note_vector_by_file(test_file)
-    log_time("Query Audio")
-    filtered_query_pv = filter_outlier_pitches(query_pv)
-    note_diff = np.gradient(filtered_query_pv)
-    _list = query(model, note_diff)
+    query_data = create_query_data(query_file)
+    _list = query(model, query_data)
+
     name, dis = _list[0]
+    print(*_list, sep="\n")
     print('The best match is:')
     print('  name:', name, ', distance:', dis)
-    log_time("End")
-    _list[:10]
-    return process_list(_list[:10], "SELECTED_SET")
+    log_time("Query End")
+    return _list
 
 
 def create_query_data(query_string):
@@ -72,25 +74,10 @@ def create_query_data(query_string):
 if __name__ == '__main__':
     log_time("Start")
 
-    file = "data/sinhala"
-    create_data_model(file)
-    model = unpickle_data(file=file_pickle_rename(file))
-    log_time("UnPickled")
-    # query_file = 'data/test/00020.wav'
-    # query_file = 'data/test/happyBirthday_by_ishara.m4a'
-    # query_file = 'data/test/nadi_ganga_hum.m4a'
-    query_file = 'data/LocalHumData/sinhala/adara mal wala.m4a'
-    # query_file = 'uploads/blob.wav'
-    # query_file = 'data/test/nadi_ganga_hum.m4a'
-    # query_file = 'data/test/2000_copy_mono.wav'
-    # query_file = 'data/test/Happy_bday_long.m4a'
+    data_model = 'data/selected_set'
+    # create_data_model(data_model)
 
-    query_data = create_query_data(query_file)
+    query_file = 'data/test/nadi_gananga_naaaaa.m4a'
+    _list = search_song(query_file, data_model)
 
-    _list = query(model, query_data)
-    name, dis = _list[0]
-
-    print(_list)
-    print('The best match is:')
-    print('  name:', name, ', distance:', dis)
     log_time("End")
