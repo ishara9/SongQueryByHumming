@@ -1,11 +1,11 @@
 import audiosegment
-import numpy as np
-from scipy import fftpack
-from statsmodels.tsa.stattools import acf
-from scipy.signal import medfilt
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy import fftpack
+from statsmodels.tsa.stattools import acf
+
 
 # list1 = [1, 2, 3, 4, 5, 6, 7]
 # list1[0::2]
@@ -49,10 +49,11 @@ def get_frame_to_pitch(frame, fs, threshold):
 
         inflection = np.diff(np.sign(np.diff(frame_acf)))  # Find the second-order differences
         peaks = (inflection < 0).nonzero()[0] + 1  # Find where they are negative
-        delay = peaks[frame_acf[peaks].argmax()]  # Of those, find the index with the maximum value
-
-        pitch = fs / delay
-        return pitch
+        pitch1 = 0
+        if len(frame_acf[peaks]) > 0:
+            delay = peaks[frame_acf[peaks].argmax()]  # Of those, find the index with the maximum value
+            pitch1 = fs / delay
+        return pitch1
 
 
 def get_frame_to_pitch2(frame, fs, threshold):
@@ -122,30 +123,88 @@ def get_channel_info_from_audio_file_lib(filename):
     return channels2, audio.frame_rate
 
 
-audio = audiosegment.from_file("data/train/A.wav")
-# audio = audio.resample(sample_rate_Hz=20000, sample_width=2)
-data = np.frombuffer(audio.raw_data, np.int16)
+def plot_wave(song, fs, bit_size=np.int8, same_plot=False):
+    x = np.frombuffer(song.raw_data, bit_size)
+    time_diff = np.linspace(0., len(x) / fs, len(x))
+    fig, ax = plt.subplots(1, 1, figsize=(7, 3))
+    ax.plot(time_diff, x, lw=1)
 
-data = data - data.mean()
-channels = []
-for i in range(audio.channels):
-    channels.append(data[i::audio.channels])
 
-frame_rate = audio.frame_rate
-multiplier = 8
-window_size = int(round(multiplier * frame_rate / 40))
-shift_ratio = 1
-shift = int(shift_ratio * window_size)
-sequence = channels[0]
-energy = np.asarray(sequence).max()
-threshold = energy * 0.1
-frame_count = ((len(sequence) - window_size) / shift) + 1
-pitch_frequencies = []
-for _window in gen_seq(frame_count, shift, window_size):
-    pitch = get_frame_to_pitch(_window, frame_rate, threshold)
-    pitch_frequencies.append(pitch)
-print(pitch_frequencies)
-notes = get_notes_by_frequencies(pitch_frequencies)
-print(notes)
-notes2 = filter_outlier_pitches(notes)
-notes_diff = np.diff(notes2)
+def plot_freq_time(freq, time_per_frame):
+    t = time_per_frame
+
+    frames = len(freq)
+
+    total_time = frames * time_per_frame
+
+    tempo = 136
+    tempo_s = 2.267   # per second
+
+    frames_per_beat = 44100/(tempo/60)   #19455
+
+    window = 153
+    window = round(1/time_per_frame * 1/2)
+    # window = 306
+
+    print("before" + str(freq))
+
+    iterations = round((frames-window)/window)
+
+    for x in range(iterations):
+        start = x * window
+        end = start + window
+        window_data = freq[start:end]
+        local_max = 0
+        for s in range(window):
+            if window_data[s] > local_max:
+                local_max = window_data[s]
+            else:
+                freq[start+s] = local_max
+
+    print("after" + str(freq))
+    time_diff = np.linspace(0., len(freq) * t, len(freq))
+    fig, ax = plt.subplots(1, 1, figsize=(6, 3))
+    ax.plot(time_diff, freq, lw=1)
+    print(freq)
+    print(("frequency"))
+
+
+if __name__ == '__main__':
+    audio = audiosegment.from_file("data/train/Happy Birthday To You-SoundBible.com-766044851.wav")
+    # audio = audio.resample(sample_rate_Hz=20000, sample_width=2)
+    data = np.frombuffer(audio.raw_data, np.int16)
+
+    y = data
+
+    data = data - data.mean()
+    channels = []
+    for i in range(audio.channels):
+        channels.append(data[i::audio.channels])
+
+    frame_rate = audio.frame_rate
+    sr = frame_rate
+    # y, sr = librosa.load('data/train/Happy Birthday To You-SoundBible.com-766044851.wav')
+    # onset_env = librosa.onset.onset_strength(y, sr=sr)
+    # tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
+
+    multiplier = 8
+    window_size = int(round(multiplier * frame_rate / 5000))
+    # window_size = frame_rate
+    shift_ratio = 1
+    shift = int(shift_ratio * window_size)
+    sequence = channels[0]
+    energy = np.asarray(sequence).max()
+    threshold = energy * 0.3
+    frame_count = ((len(sequence) - window_size) / shift) + 1
+    pitch_frequencies = []
+    for _window in gen_seq(frame_count, shift, window_size):
+        pitch = get_frame_to_pitch(_window, frame_rate, threshold)
+        pitch_frequencies.append(pitch)
+    print(pitch_frequencies)
+    time_per_frame = len(sequence) / (frame_rate * frame_count)
+    plot_freq_time(pitch_frequencies, time_per_frame)
+
+    notes = get_notes_by_frequencies(pitch_frequencies)
+    print(notes)
+    notes2 = filter_outlier_pitches(notes)
+    notes_diff = np.diff(notes2)

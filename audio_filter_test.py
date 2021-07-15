@@ -29,20 +29,28 @@ def play(data, samplerate, autoplay=False):
 
 
 def highpass(cut_off_low, cut_off_high, x, fr):
-    b, a = sg.butter(4, cut_off_high / (fr / 2.), 'high')
-    x_fil = sg.filtfilt(b, a, x)
     t = np.linspace(0., len(x) / fr, len(x))
-    fig, ax = plt.subplots(1, 1, figsize=(6, 3))
-    ax.plot(t, x, lw=1)
-    ax.plot(t, x_fil, lw=1)
-    play(x_fil, fr, autoplay=True)
+
+
     b, a = sg.butter(4, cut_off_low / (fr / 2.), 'low')
-    x_fil_2 = sg.filtfilt(b, a, x_fil)
+    x_fil_2 = sg.filtfilt(b, a, x)
+    x_fil_2 = sg.sosfiltfilt(b, x)
     fig, ax = plt.subplots(1, 1, figsize=(6, 3))
     ax.plot(t, x, lw=1)
-    ax.plot(t, x_fil, lw=1)
+
     ax.plot(t, x_fil_2, lw=1)
     play(x_fil_2, fr, autoplay=True)
+
+    b, a = sg.butter(4, cut_off_high / (fr / 2.), 'high')
+    x_fil = sg.filtfilt(b, a, x_fil_2)
+
+    fig, ax = plt.subplots(1, 1, figsize=(6, 3))
+    ax.plot(t, x, lw=1)
+    ax.plot(t, x_fil_2, lw=1)
+    ax.plot(t, x_fil, lw=1)
+
+    play(x_fil, fr, autoplay=True)
+
     print("2 filters")
 
 
@@ -59,7 +67,7 @@ if __name__ == '__main__':
     fig, ax = plt.subplots(1, 1, figsize=(8, 4))
     t = np.linspace(0., len(data) / frame_rate, len(data))
     ax.plot(t, data, lw=1)
-    play(data, frame_rate)
+    # play(data, frame_rate)
     #
     # b, a = sg.butter(4, 500. / (frame_rate / 2.), 'low')
     # x_fil = sg.filtfilt(b, a, data)
@@ -75,5 +83,5 @@ if __name__ == '__main__':
     # ax.plot(t, data, lw=1)
     # ax.plot(t, x_fil, lw=1)
 
-    highpass(800, 200, data, frame_rate)
+    highpass(600, 400, data, frame_rate)
     print("stop")

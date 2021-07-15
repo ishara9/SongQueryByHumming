@@ -10,12 +10,12 @@ from audio_util import *
 
 def get_pitches_from_audio(filename, multiplier=8):
     channels, frame_rate = get_channel_info_from_audio_file(filename)
-    window_size = int(round(multiplier * frame_rate / 1000.0))
+    window_size = int(round(multiplier * frame_rate / 5000.0))
     data = channels[0]
     energy = get_energy(data)
     threshold = 0.15 * energy
     pitch_frequencies = []
-    for _window in sliding_window(data, window_size, shift_ratio=0.8):
+    for _window in sliding_window(data, window_size, shift_ratio=1):
         pitch = get_frame_to_pitch(_window, frame_rate, threshold)
         pitch_frequencies.append(pitch)
     # print(pitch_frequencies)
@@ -29,9 +29,9 @@ def get_channel_info_from_audio_file(filename):
 
     data = np.frombuffer(audio.raw_data, np.int16)
 
-    fr = audio.frame_rate
-    b, a = sg.butter(4, 1000. / (fr / 2.), 'high')
-    data = sg.filtfilt(b, a, data)
+    # fr = audio.frame_rate
+    # b, a = sg.butter(4, 1000. / (fr / 2.), 'high')
+    # data = sg.filtfilt(b, a, data)
     # b, a = sg.butter(4, 100. / (fr / 2.), 'low')
     # data = sg.filtfilt(b, a, data)
 
