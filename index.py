@@ -5,9 +5,9 @@ from file_processor import *
 from logger import log_time
 
 
-def zero_index_dtw(filtered_notes):
-    zero_index_array = np.asarray([0 for _ in range(len(filtered_notes))])
-    variation = calculate_dtw(zero_index_array, filtered_notes)
+def zero_index_dtw(filtered_notes, white_noise):
+    # zero_index_array = np.asarray([0 for _ in range(len(filtered_notes))])
+    variation = calculate_dtw(white_noise, filtered_notes)
     print(variation)
     return variation
 
@@ -15,12 +15,13 @@ def zero_index_dtw(filtered_notes):
 def create_data_model(file, filters=['wav']):
     data_set = {}
     files = get_filtered_files(file, filters)
+    white_noise = get_white_noise_data()
     for file_name in files:
         log_time("progress " + file_name)
         note_vector = get_note_vector_by_file(file_name)
         filtered_notes = filter_sound(note_vector)
-        # zero_dtw = zero_index_dtw(filtered_notes)
-        song = {'notes': filtered_notes, 'zero_dtw': 0}
+        zero_dtw = zero_index_dtw(filtered_notes, white_noise)
+        song = {'notes': filtered_notes, 'zero_dtw': zero_dtw}
         data_set[file_name] = song
     log_time("Model Created")
     pickle_data(data_set, file=file_pickle_rename(file))
@@ -29,21 +30,40 @@ def create_data_model(file, filters=['wav']):
 
 
 def filter_sound(notes):
-    notes = medfilt(notes, 3)  # kernal size 3
-    notes = filter_outlier_pitches(notes)
+    # notes = medfilt(notes, 3)  # kernal size 3
+    # notes = filter_outlier_pitches(notes)
     # notes = np.gradient(notes)
+    log_time("np.diff Start")
     notes = np.diff(notes)
+    log_time("np.diff End")
     return notes
 
 
-def query(data_model, _query_pv):
+def get_white_noise_data():
+    query_file = 'data/white_noise.wav'
+    query_data = create_query_data(query_file)
+    return query_data
+
+
+def query(data_model, _query_pv, zero_remove=False):
+    log_time("query start")
     distance = {}
+    log_time("data_model:loop start")
+
     for file_name, song1 in data_model.items():
         model_pv = song1['notes']
         zero_dtw = song1['zero_dtw']
-        distance[file_name] = calculate_dtw(model_pv, _query_pv)
+        log_time("data_model:loop file_name:" + str(file_name))
+        if zero_remove:
+            distance[file_name] = calculate_dtw(model_pv, _query_pv) - zero_dtw
+        else:
+            distance[file_name] = calculate_dtw(model_pv, _query_pv)
+        log_time("data_model:loop distance:" + str(distance[file_name]))
+
+    log_time("data_model:loop end")
     sorted_items = dict(sorted(distance.items(), key=lambda item: item[1])).items()
     item_list = list(sorted_items)
+    log_time("query end")
     return item_list
 
 
@@ -61,11 +81,11 @@ def search_tune():
 
 
 def search_song(query_file, data_model="data/sinhala"):
-    log_time("Query start")
+    log_time("search_song start")
     model = unpickle_data(file=file_pickle_rename(data_model))
     log_time("UnPickled")
     query_data = create_query_data(query_file)
-    _list = query(model, query_data)
+    _list = query(model, query_data, False)
 
     name, dis = _list[0]
     print(*_list, sep="\n")
@@ -76,9 +96,10 @@ def search_song(query_file, data_model="data/sinhala"):
 
 
 def create_query_data(query_string):
-    log_time("Query string processing :" + query_string)
+    log_time("============= Query string processing :" + query_string + "=============")
     query_nv = get_note_vector_by_file(query_string)
     filtered_notes = filter_sound(query_nv)
+    log_time("create_query_data End")
     return filtered_notes
 
 
@@ -87,8 +108,9 @@ if __name__ == '__main__':
 
     data_model = 'data/selected_set'
     create_data_model(data_model)
-
-    query_file = 'data/test/nadi_ganga_hum.m4a'
+    #
+    # query_file = 'data/hum_sinhala/Kuweni A.wav'
+    query_file = 'data/hum_sinhala/Anantayata yana A.wav'
     _list = search_song(query_file, data_model)
 
     log_time("End")

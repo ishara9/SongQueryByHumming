@@ -6,7 +6,7 @@ import numpy as np
 from dtw import dtw
 from scipy import fftpack
 from statsmodels.tsa.stattools import acf
-
+import scipy.signal as sg
 
 # list1 = [1, 2, 3, 4, 5, 6, 7]
 # list1[0::2]
@@ -144,13 +144,14 @@ def plot_freq_time(pitch_freq_hops, time_per_hop):
     print(("frequency"))
 
 
-def max_filter(pitch_freq_hops, time_per_hop):
+def max_filter(pitch_freq_hops, time_per_hop, tempo):
     hop_count = len(pitch_freq_hops)
 
     total_time = hop_count * time_per_hop  # 11.284897959183674
     # len(sequence) / total_time =  11025.0
     beats_per_minute = 136
     beats_per_second = 2.267  # per second
+    beats_per_second = tempo[0] / 60.0  # per second
 
     frames_per_beat = 44100 / (beats_per_minute / 60)  # 19455
 
@@ -208,7 +209,10 @@ def note_process(audio):
     # audio = audio.resample(sample_rate_Hz=20000, sample_width=2)
     data = np.frombuffer(audio.raw_data, np.int16)
 
-    y = data
+    fr = audio.frame_rate
+
+    d, c = sg.butter(1, 800. / (fr / 2.), 'low')
+    data = sg.filtfilt(d, c, data)
 
     data = data - data.mean()
     channels = []
@@ -216,12 +220,13 @@ def note_process(audio):
         channels.append(data[i::audio.channels])
 
     frame_rate = audio.frame_rate
+    y = np.asarray(np.double(data))
     sr = frame_rate
-    # y, sr = librosa.load('data/train/Happy Birthday To You-SoundBible.com-766044851.wav')
-    # onset_env = librosa.onset.onset_strength(y, sr=sr)
-    # tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
+    # y, sr = librosa.load('data/selected_set/Roo Sara C.wav')
+    onset_env = librosa.onset.onset_strength(y, sr=sr)
+    tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
 
-    time_per_hop = 16 / 10000
+    time_per_hop = 32 / 10000
     # window_size = int(round(multiplier * frame_rate / 5000))
     window_size = int(round(frame_rate * time_per_hop))
     shift_ratio = 1
@@ -237,8 +242,10 @@ def note_process(audio):
     print(pitch_freq_hops)
     time_per_hop = len(sequence) / (frame_rate * hop_count)
 
-    pitch_freq_hops = max_filter(pitch_freq_hops, time_per_hop)
-    # plot_freq_time(pitch_freq_hops, time_per_hop)
+    plot_freq_time(pitch_freq_hops, time_per_hop)
+
+    pitch_freq_hops = max_filter(pitch_freq_hops, time_per_hop, tempo)
+    plot_freq_time(pitch_freq_hops, time_per_hop)
 
     notes = get_notes_by_frequencies(pitch_freq_hops)
     print(notes)
@@ -247,7 +254,11 @@ def note_process(audio):
     refined_notes = refine_model(notes)
     notes = np.diff(refined_notes)
     plot_freq_time(notes, time_per_hop)
-    return notes
+
+    unzeroed = notes[notes != 0]
+    plot_freq_time(unzeroed, time_per_hop)
+
+    return unzeroed
 
 
 def calculate_dtw(_model_pv, _query_pv):
@@ -271,10 +282,10 @@ def refine_model(model):
 
 
 if __name__ == '__main__':
-    audio = audiosegment.from_file("data/selected_set/Nadee-Ganga-Tharanaye-Chitral-Somapala_short.wav")
+    audio = audiosegment.from_file("data/selected_set/Roo Sara C.wav")
     process1 = note_process(audio)
     # audio2 = audiosegment.from_file("data/LocalHumData/sinhala/Dawasak Da Hendewaka.m4a")
-    audio2 = audiosegment.from_file("data/test/nadi_gana_cut.m4a")
+    audio2 = audiosegment.from_file("data/good_hummings/Roosara A.m4a")
     process2 = note_process(audio2)
     distance = calculate_dtw(process1, process2)
     print(distance)

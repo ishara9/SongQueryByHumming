@@ -34,7 +34,7 @@ def file_pickle_rename(file_path):
 
 def file_path_to_name_formatter(path):
     a = re.search(r'(\\)', path)
-    file_name = path[a.start() + 1:-4]
+    file_name = path[a.start() + 1:-5]
     # print(file_name)
     return file_name
 

@@ -15,30 +15,29 @@ def evaluate_model():
     tests_result = {}
     actual_data = []
     for test_file in test_files:
-        test_name = file_path_to_name_formatter(test_file)
-        actual_data.append(test_name)
+        actual_data.append(file_path_to_name_formatter(test_file))
         query_data = create_query_data(test_file)
-        _list = query(model, query_data)
+        _list = query(model, query_data, False)
         temp = []
         for i, predict in enumerate(_list[:5]):
             name, dis = predict
             temp.append(file_path_to_name_formatter(name))
-        tests_result[test_name] = temp
+        tests_result[test_file] = temp
 
     print('Predicted:' + str(tests_result))
     print('Actual data:' + str(actual_data))
 
     tests, actual = format_test_results(tests_result)
     # actual = format_actual_results(actual_data)
-    testable_values = tests.copy()
-    testable_values.append('no_match')
+    testable_values = set(actual_data.copy())
+    testable_values.add('no_match')
 
     print('Formatted Predicted:' + str(tests))
     print('Formatted Actual data:' + str(actual))
     print('Formatted Testable values:' + str(testable_values))
 
-    create_confusion_matrix(tests, actual, testable_values)
-    get_classification_report(tests, actual, testable_values)
+    create_confusion_matrix(tests, actual, list(testable_values))
+    get_classification_report(tests, actual, list(testable_values))
 
     log_time("End")
 
@@ -54,13 +53,14 @@ def format_test_results(tests_result):
     for key in tests_result:
         value = tests_result[key]
         is_contains = False
-        single_key.append(key)
+        formatted_key = file_path_to_name_formatter(key)
+        single_key.append(formatted_key)
         for each in value:
-            if equals(key, each):
+            if equals(formatted_key, each):
                 is_contains = True
                 continue
         if is_contains:
-            single_value.append(key)
+            single_value.append(formatted_key)
         else:
             single_value.append('no_match')
 
