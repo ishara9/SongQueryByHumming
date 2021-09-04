@@ -61,15 +61,12 @@ def gen_seq(frame_count, shift, window_size, sequence):
 
 def avg_filter(pitch_freq_hops, time_per_hop, tempo):
     hop_count = len(pitch_freq_hops)
-    beats_per_second = tempo / 60.0  # per second
-    hops_per_second = 1 / time_per_hop  # 625
+    beats_per_second = tempo / 60.0  # beats per second
+    hops_per_second = 1 / time_per_hop
     hops_per_beat_window = round((hops_per_second - beats_per_second) / beats_per_second + 1)
     divisor = 1
     hops_per_beat_window = round(hops_per_beat_window / divisor)
-    if hop_count < hops_per_beat_window:
-        iterations = round(hop_count / hops_per_beat_window) + divisor# 22
-    else:
-        iterations = round(hop_count / hops_per_beat_window)  # 22
+    iterations = int(hop_count / hops_per_beat_window) + 1
     for x in range(iterations):
         start = x * hops_per_beat_window
         end = start + hops_per_beat_window

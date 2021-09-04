@@ -138,7 +138,7 @@ def plot_freq_time(pitch_freq_hops, time_per_hop):
 
     print("after" + str(pitch_freq_hops))
     time_diff = np.linspace(0., len(pitch_freq_hops) * t, len(pitch_freq_hops))
-    fig, ax = plt.subplots(1, 1, figsize=(12, 3))
+    fig, ax = plt.subplots(1, 1, figsize=(6, 3))
     ax.plot(time_diff, pitch_freq_hops, lw=1)
     print(pitch_freq_hops)
     print(("frequency"))
@@ -198,10 +198,7 @@ def avg_filter(pitch_freq_hops, time_per_hop, tempo):
     hops_per_beat_window = round(hops_per_second / beats_per_second)
     divisor = 1
     hops_per_beat_window = round(hops_per_beat_window / divisor)
-    if hop_count < hops_per_beat_window:
-        iterations = round(hop_count / hops_per_beat_window) + divisor# 22
-    else:
-        iterations = round(hop_count / hops_per_beat_window)  # 22
+    iterations = int(hop_count / hops_per_beat_window) + 1
     for x in range(iterations):
         start = x * hops_per_beat_window
         end = start + hops_per_beat_window

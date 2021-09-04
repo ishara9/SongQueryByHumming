@@ -118,7 +118,7 @@ if __name__ == '__main__':
     log_time("Start")
 
     data_model = 'data/selected_set'
-    create_data_model(data_model)
+    # create_data_model(data_model)
 
     query_file = 'data/test/alay ish B.m4a'
     _list = search_song(query_file, data_model)
