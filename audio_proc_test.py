@@ -138,7 +138,7 @@ def plot_freq_time(pitch_freq_hops, time_per_hop):
 
     print("after" + str(pitch_freq_hops))
     time_diff = np.linspace(0., len(pitch_freq_hops) * t, len(pitch_freq_hops))
-    fig, ax = plt.subplots(1, 1, figsize=(6, 3))
+    fig, ax = plt.subplots(1, 1, figsize=(12, 3))
     ax.plot(time_diff, pitch_freq_hops, lw=1)
     print(pitch_freq_hops)
     print(("frequency"))
@@ -159,12 +159,13 @@ def max_filter(pitch_freq_hops, time_per_hop, tempo):
     # window = 153
     # window = round(1 / time_per_frame * 1 / 2)
     hops_per_beat_window = round(hops_per_second / beats_per_second)
-    hops_per_beat_proportion = hops_per_beat_window / 4
+    divisor = 2
+    hops_per_beat_window = round(hops_per_beat_window / divisor)
     # window = 306
 
     print("before" + str(pitch_freq_hops))
 
-    iterations = round((hop_count - hops_per_beat_window) / hops_per_beat_window)  # 22
+    iterations = round((hop_count - hops_per_beat_window) / hops_per_beat_window) + divisor # 22
 
     # freq = median_filter(freq, iterations, window)
 
@@ -172,14 +173,42 @@ def max_filter(pitch_freq_hops, time_per_hop, tempo):
         start = x * hops_per_beat_window
         end = start + hops_per_beat_window
         window_data = pitch_freq_hops[start:end]
-        # new_end = start + len(window_data)
-        local_max = -100
+        new_end = start + len(window_data)
+        # local_max = float('-inf')
+        # local_min = float('inf')
+        local_total=0
         for s in range(len(window_data)):
-            if window_data[s] > local_max:
-                local_max = window_data[s]
-            else:
-                pitch_freq_hops[start + s] = local_max
+            # if window_data[s] > local_max:
+            #     local_max = window_data[s]
+            # if window_data[s] < local_min:
+            #     local_min = window_data[s]
+            # else:
+            #     pitch_freq_hops[start + s] = local_max
+            local_total = local_total + window_data[s]
         # pitch_freq_hops[start:new_end] = [local_max] * (new_end-start)
+        average_per_window = local_total / (new_end - start)
+        pitch_freq_hops[start:new_end] = [average_per_window] * (new_end - start)
+    return pitch_freq_hops
+
+
+def avg_filter(pitch_freq_hops, time_per_hop, tempo):
+    hop_count = len(pitch_freq_hops)
+    beats_per_second = tempo[0] / 60.0  # per second
+    hops_per_second = 1 / time_per_hop  # 625
+    hops_per_beat_window = round(hops_per_second / beats_per_second)
+    divisor = 1
+    hops_per_beat_window = round(hops_per_beat_window / divisor)
+    iterations = round((hop_count - hops_per_beat_window) / hops_per_beat_window) + divisor # 22
+    for x in range(iterations):
+        start = x * hops_per_beat_window
+        end = start + hops_per_beat_window
+        window_data = pitch_freq_hops[start:end]
+        new_end = start + len(window_data)
+        local_total=0
+        for s in range(len(window_data)):
+            local_total = local_total + window_data[s]
+        average_per_window = local_total / (new_end - start)
+        pitch_freq_hops[start:new_end] = [average_per_window] * (new_end - start)
     return pitch_freq_hops
 
 
@@ -226,7 +255,7 @@ def note_process(audio):
     onset_env = librosa.onset.onset_strength(y, sr=sr)
     tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
 
-    time_per_hop = 32 / 10000
+    time_per_hop = 64 / 10000
     # window_size = int(round(multiplier * frame_rate / 5000))
     window_size = int(round(frame_rate * time_per_hop))
     shift_ratio = 1

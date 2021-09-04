@@ -29,15 +29,20 @@ def evaluate_model():
 
     tests, actual = format_test_results(tests_result)
     # actual = format_actual_results(actual_data)
-    testable_values = set(actual_data.copy())
-    testable_values.add('no_match')
+    testable_values = set(actual.copy())
+    testable_values.update(set(tests.copy()))
+    # testable_values.add('no_match')
+    ordered = list(testable_values)
+
+    tests.extend(ordered)
+    actual.extend(ordered)
 
     print('Formatted Predicted:' + str(tests))
     print('Formatted Actual data:' + str(actual))
     print('Formatted Testable values:' + str(testable_values))
 
-    create_confusion_matrix(tests, actual, list(testable_values))
-    get_classification_report(tests, actual, list(testable_values))
+    create_confusion_matrix(tests, actual, list(sorted(testable_values)))
+    get_classification_report(tests, actual, list(sorted(testable_values)))
 
     log_time("End")
 
@@ -62,7 +67,7 @@ def format_test_results(tests_result):
         if is_contains:
             single_value.append(formatted_key)
         else:
-            single_value.append('no_match')
+            single_value.append(value[0])
 
     return single_key, single_value
 
@@ -81,4 +86,3 @@ def file_names_lister():
 
 if __name__ == '__main__':
     evaluate_model()
-    # format_test_results([])

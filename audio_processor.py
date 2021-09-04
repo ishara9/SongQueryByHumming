@@ -47,7 +47,7 @@ def get_pitches_from_audio(filename, multiplier=8):
     onset_env = librosa.onset.onset_strength(y, sr=sr)
     tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
 
-    pitch_freq_hops = max_filter(pitch_freq_hops, time_per_hop, tempo[0])
+    pitch_freq_hops = avg_filter(pitch_freq_hops, time_per_hop, tempo[0])
 
     log_time("get_pitches_from_audio End")
     return pitch_freq_hops
@@ -58,6 +58,25 @@ def gen_seq(frame_count, shift, window_size, sequence):
     for i in range(0, int(frame_count) * shift, shift):
         yield sequence[i:i + window_size]
 
+def avg_filter(pitch_freq_hops, time_per_hop, tempo):
+    hop_count = len(pitch_freq_hops)
+    beats_per_second = tempo / 60.0  # per second
+    hops_per_second = 1 / time_per_hop  # 625
+    hops_per_beat_window = round(hops_per_second / beats_per_second)
+    divisor = 1
+    hops_per_beat_window = round(hops_per_beat_window / divisor)
+    iterations = round((hop_count - hops_per_beat_window) / hops_per_beat_window) + 1 # 22
+    for x in range(iterations):
+        start = x * hops_per_beat_window
+        end = start + hops_per_beat_window
+        window_data = pitch_freq_hops[start:end]
+        new_end = start + len(window_data)
+        local_total=0
+        for s in range(len(window_data)):
+            local_total = local_total + window_data[s]
+        average_per_window = local_total / (new_end - start)
+        pitch_freq_hops[start:new_end] = [average_per_window] * (new_end - start)
+    return pitch_freq_hops
 
 def max_filter(pitch_freq_hops, time_per_hop, tempo):
     log_time("max_filter Start")
