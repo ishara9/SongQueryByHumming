@@ -151,7 +151,7 @@ def max_filter(pitch_freq_hops, time_per_hop, tempo):
     # len(sequence) / total_time =  11025.0
     beats_per_minute = 136
     beats_per_second = 2.267  # per second
-    beats_per_second = tempo[0] / 60.0  # per second
+    beats_per_second = tempo / 60.0  # per second
 
     frames_per_beat = 44100 / (beats_per_minute / 60)  # 19455
 
@@ -193,12 +193,15 @@ def max_filter(pitch_freq_hops, time_per_hop, tempo):
 
 def avg_filter(pitch_freq_hops, time_per_hop, tempo):
     hop_count = len(pitch_freq_hops)
-    beats_per_second = tempo[0] / 60.0  # per second
+    beats_per_second = tempo / 60.0  # per second
     hops_per_second = 1 / time_per_hop  # 625
     hops_per_beat_window = round(hops_per_second / beats_per_second)
     divisor = 1
     hops_per_beat_window = round(hops_per_beat_window / divisor)
-    iterations = round((hop_count - hops_per_beat_window) / hops_per_beat_window) + divisor # 22
+    if hop_count < hops_per_beat_window:
+        iterations = round(hop_count / hops_per_beat_window) + divisor# 22
+    else:
+        iterations = round(hop_count / hops_per_beat_window)  # 22
     for x in range(iterations):
         start = x * hops_per_beat_window
         end = start + hops_per_beat_window
@@ -253,7 +256,7 @@ def note_process(audio):
     sr = frame_rate
     # y, sr = librosa.load('data/selected_set/Roo Sara C.wav')
     onset_env = librosa.onset.onset_strength(y, sr=sr)
-    tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
+    tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)[0]
 
     time_per_hop = 64 / 10000
     # window_size = int(round(multiplier * frame_rate / 5000))
@@ -273,7 +276,7 @@ def note_process(audio):
 
     plot_freq_time(pitch_freq_hops, time_per_hop)
 
-    pitch_freq_hops = max_filter(pitch_freq_hops, time_per_hop, tempo)
+    pitch_freq_hops = avg_filter(pitch_freq_hops, time_per_hop, tempo)
     plot_freq_time(pitch_freq_hops, time_per_hop)
 
     notes = get_notes_by_frequencies(pitch_freq_hops)
@@ -284,10 +287,10 @@ def note_process(audio):
     notes = np.diff(refined_notes)
     plot_freq_time(notes, time_per_hop)
 
-    unzeroed = notes[notes != 0]
-    plot_freq_time(unzeroed, time_per_hop)
+    # unzeroed = notes[notes != 0]
+    # plot_freq_time(unzeroed, time_per_hop)
 
-    return unzeroed
+    return notes
 
 
 def calculate_dtw(_model_pv, _query_pv):
@@ -311,10 +314,10 @@ def refine_model(model):
 
 
 if __name__ == '__main__':
-    audio = audiosegment.from_file("data/selected_set/Roo Sara C.wav")
+    audio = audiosegment.from_file("data/selected_set/dump/Nadee Ganga A.wav")
     process1 = note_process(audio)
     # audio2 = audiosegment.from_file("data/LocalHumData/sinhala/Dawasak Da Hendewaka.m4a")
-    audio2 = audiosegment.from_file("data/good_hummings/Roosara A.m4a")
+    audio2 = audiosegment.from_file("data/test/nadi_gana_cut.m4a")
     process2 = note_process(audio2)
     distance = calculate_dtw(process1, process2)
     print(distance)

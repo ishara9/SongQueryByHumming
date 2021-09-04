@@ -1,12 +1,12 @@
 from scipy.signal import medfilt
-
+from tornado import concurrent
 from audio_processor import *
 from file_processor import *
 from logger import log_time
 
 
 def zero_index_dtw(filtered_notes, white_noise):
-    # zero_index_array = np.asarray([0 for _ in range(len(filtered_notes))])
+    # white_noise = np.asarray([0 for _ in range(len(filtered_notes))])
     variation = calculate_dtw(white_noise, filtered_notes)
     print(variation)
     return variation
@@ -30,8 +30,8 @@ def create_data_model(file, filters=['wav']):
 
 
 def filter_sound(notes):
-    # notes = medfilt(notes, 3)  # kernal size 3
-    # notes = filter_outlier_pitches(notes)
+    notes = medfilt(notes, 3)  # kernal size 3
+    notes = filter_outlier_pitches(notes)
     # notes = np.gradient(notes)
     log_time("np.diff Start")
     notes = np.diff(notes)
@@ -45,20 +45,31 @@ def get_white_noise_data():
     return query_data
 
 
+def distance_calculator_worker(item, _query_pv, zero_remove):
+    distance = {}
+    file_name = item[0]
+    song1 = item[1]
+    model_pv = song1['notes']
+    zero_dtw = song1['zero_dtw']
+    log_time("data_model:loop file_name:" + str(file_name))
+    if zero_remove:
+        distance[file_name] = calculate_dtw(model_pv, _query_pv) - zero_dtw
+    else:
+        distance[file_name] = calculate_dtw(model_pv, _query_pv)
+    log_time("data_model:loop distance:" + str(distance[file_name]))
+    return distance
+
+
 def query(data_model, _query_pv, zero_remove=False):
     log_time("query start")
     distance = {}
     log_time("data_model:loop start")
 
-    for file_name, song1 in data_model.items():
-        model_pv = song1['notes']
-        zero_dtw = song1['zero_dtw']
-        log_time("data_model:loop file_name:" + str(file_name))
-        if zero_remove:
-            distance[file_name] = calculate_dtw(model_pv, _query_pv) - zero_dtw
-        else:
-            distance[file_name] = calculate_dtw(model_pv, _query_pv)
-        log_time("data_model:loop distance:" + str(distance[file_name]))
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(distance_calculator_worker, item, _query_pv, zero_remove) for item in
+                   data_model.items()]
+        for future in concurrent.futures.as_completed(futures):
+            distance.update(future.result())
 
     log_time("data_model:loop end")
     sorted_items = dict(sorted(distance.items(), key=lambda item: item[1])).items()
@@ -108,9 +119,8 @@ if __name__ == '__main__':
 
     data_model = 'data/selected_set'
     create_data_model(data_model)
-    #
-    # query_file = 'data/hum_sinhala/Kuweni A.wav'
-    query_file = 'data/hum_sinhala/Anantayata yana A.wav'
+
+    query_file = 'data/test/alay ish B.m4a'
     _list = search_song(query_file, data_model)
 
     log_time("End")
