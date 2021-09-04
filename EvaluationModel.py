@@ -2,6 +2,8 @@ from ConfusionMatrix import *
 from index import *
 from logger import log_time
 
+test_file_dir = 'data/Evaluation/good'
+
 
 def evaluate_model():
     log_time("Start")
@@ -11,7 +13,7 @@ def evaluate_model():
     model = unpickle_data(file=file_pickle_rename(file))
     log_time("UnPickled")
     filters = ['m4a']
-    test_files = get_filtered_files('data/LocalHumData/sinhala', filters)
+    test_files = get_filtered_files(test_file_dir, filters)
     tests_result = {}
     actual_data = []
     for test_file in test_files:
@@ -77,8 +79,8 @@ def format_actual_results(actual_data):
 
 
 def file_names_lister():
-    file = "data/LocalHumData/sinhala"
-    filters = ['m4a']
+    file = test_file_dir
+    filters = ['m4a', 'wav']
     files = get_filtered_files(file, filters)
     for file_name in files:
         print(file_name)
