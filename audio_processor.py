@@ -125,10 +125,10 @@ def get_channel_info_from_audio_file(filename):
     # data = sg.filtfilt(b, a, data)
     # log_time("Upper band cut End")
 
-    log_time("Lower band cut Start")
-    d, c = sg.butter(4, 800. / (fr / 2.), 'low')
-    data = sg.filtfilt(d, c, data)
-    log_time("Lower band cut End")
+    # log_time("Lower band cut Start")
+    # d, c = sg.butter(4, 600. / (fr / 2.), 'low')
+    # data = sg.filtfilt(d, c, data)
+    # log_time("Lower band cut End")
 
     data = data - data.mean()
     channels = []

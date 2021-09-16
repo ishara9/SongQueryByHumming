@@ -86,7 +86,8 @@ def process_list(_list):
 
 def search_tune():
     query_file = 'uploads/blob.wav'
-    data_model = 'data/selected_set'
+    # data_model = 'data/selected_set'
+    data_model = 'data/Sinhala_15_sec'
     _list = search_song(query_file, data_model)
     return process_list(_list[:10])
 
@@ -117,10 +118,10 @@ def create_query_data(query_string):
 if __name__ == '__main__':
     log_time("Start")
 
-    data_model = 'data/selected_set'
-    # create_data_model(data_model)
+    data_model = 'data/Sinhala_15_sec'
+    create_data_model(data_model)
 
-    query_file = 'data/test/alay ish B.m4a'
+    query_file = 'uploads/blob.wav'
     _list = search_song(query_file, data_model)
 
     log_time("End")

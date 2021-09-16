@@ -42,8 +42,6 @@ def generate_patter():
 def upload():
     if request.method == 'POST':
         file = request.files['data']
-        # extension = os.path.splitext(file.filename)[1]
-        # f_name = str(uuid.uuid4()) + extension
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
         _list = search_tune()
         return json.dumps({'songList': _list})
